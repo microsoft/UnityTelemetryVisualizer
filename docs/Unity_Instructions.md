@@ -105,7 +105,7 @@ Once you have data uploaded, you are ready to start visualizing it!
 1. In the Unity editor, open your project.
 2. Open the **Window** menu and select **Game Telemetry**
 
-    ![alt text](\images\unity\window_menu.png)
+    ![Window](images/unity/window_menu.png)
 
 3. A new window will open.  Note that these can be docked anywhere in the editor or combined within windows.
 
@@ -113,16 +113,16 @@ Once you have data uploaded, you are ready to start visualizing it!
 
 4. First, we will use the **Event Settings** sections to get our first dataset.  Build a query for what general events you would like to recieve.  Once you are ready, press **Submit** and wait for the results.  If the query found events, you will see them populate in the **Event Search** section.
     
-    ![alt text](\images\unity\data_viewer.png)
+    ![Game Telemetry window](images/unity/data_viewer.png)
 
 5. By default, all data received by the query will be enabled.  In the **Event Search** section, you can uncheck any event groups you do not wish to see and use the search bar above to look for different event names.  In addition, each event group has a changeable color and shape for how each event is drawn.
 6. You should now have events being drawn directly in your game world.  Use the different shapes and colors to customize your view to see the most relivant information.  Also note that using shapes such as the capsule will provide orientation detail as well.
     
-    ![alt text](\images\unity\points.png)
+    ![Telemetry points](images/unity/points.png)
 
 7. All of the events are actually interactive elements in the game.  They can be clicked to see further details, zoomed, saved, and more.  In the **Hierarchy** window, just look for game objects under the **GameTelemetry** section.
     
-    ![alt text](\images\unity\world_outliner.png)
+    ![Hierarchy](images/unity/world_outliner.png)
 
 8. Now we will use the **Visualization Tools** section to get unique views of our data. Expand the drop down to see a list of event types, the same from the *Event Search* section above. Select one of those event groups.
 
@@ -131,7 +131,7 @@ Once you have data uploaded, you are ready to start visualizing it!
        Note: If there is a gap in time greater than 30 seconds, the animation will skip ahead to keep the visualization more fluid
 10. Now lets look at the *Heatmap Settings* area.  Here, you can select a variety of options to combine your event data in to a 3D map and even watch that collection of data animate over time.
 
-    ![alt text](\images\unity\heatmap.png)
+    ![Telemetry heatmap](images/unity/heatmap.png)
 
 11. Type represents the type of heatmap you would like to generate.
     + *Population* combines events into physical groups and displays a heatmap of the number of each event within a given group.
