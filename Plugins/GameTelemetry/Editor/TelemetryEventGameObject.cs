@@ -130,6 +130,8 @@ namespace GameTelemetry
             }
         }
 
+        private Material localMaterial = new Material(Shader.Find("GameTelemetry"));
+
         //Populates event values based on a telemetry event
         public void SetEvent(TelemetryEvent inEvent, Color inColor, PrimitiveType inType)
         {
@@ -190,9 +192,7 @@ namespace GameTelemetry
             if (gameObject != null)
             {
                 eventRenderer.GetPropertyBlock(properties);
-                properties.SetColor("_BaseColor", color);
                 properties.SetColor("_Color", color);
-                properties.SetColor("_EmissionColor", color);
                 eventRenderer.SetPropertyBlock(properties);
             }
         }
@@ -210,6 +210,7 @@ namespace GameTelemetry
             }
 
             eventRenderer = gameObject.GetComponent<Renderer>();
+            eventRenderer.material = localMaterial;
 
             EventInfo newInfo = gameObject.AddComponent<EventInfo>();
             newInfo.CopyFrom(eventInfo);

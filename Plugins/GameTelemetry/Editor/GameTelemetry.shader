@@ -1,0 +1,37 @@
+﻿Shader "GameTelemetry" {
+	Properties
+	{
+		_Color("Color", Color) = (1.0, 1.0, 1.0, 1.0)
+	}
+		
+	SubShader
+	{
+		Tags { "RenderType" = "Transparent" "IgnoreProjector" = "True" "Queue" = "Transparent" }
+		
+		ZWrite Off
+		Blend SrcAlpha OneMinusSrcAlpha
+		LOD 200
+
+		CGPROGRAM
+		#pragma surface surf Lambert alpha:fade
+
+		fixed4 _Color;
+
+		// Note: pointless texture coordinate. I couldn't get Unity (or Cg)
+		//       to accept an empty Input structure or omit the inputs.
+		struct Input
+		{
+			float2 uv_MainTex;
+		};
+
+		void surf(Input IN, inout SurfaceOutput o)
+		{
+			o.Albedo = _Color.rgb;
+			o.Emission = _Color.rgb;
+			o.Alpha = _Color.a;
+		}
+		
+		ENDCG
+	}
+	FallBack "Diffuse"
+}
