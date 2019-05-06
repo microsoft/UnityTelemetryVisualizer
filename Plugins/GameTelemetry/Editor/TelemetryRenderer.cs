@@ -224,7 +224,11 @@ namespace GameTelemetry
                                     }
                                 }
 
-                                largestValue = Math.Max(largestValue, values[i]);
+                                if (numValues[i] > 0)
+                                {
+                                    largestValue = Math.Max(largestValue, values[i] / numValues[i]);
+                                }
+
                                 largestNumValue = Math.Max(largestNumValue, numValues[i]);
                                 orientation[i] = orientation[i] / numValues[i];
                             }
@@ -242,7 +246,11 @@ namespace GameTelemetry
                                     }
                                 }
 
-                                largestValue = Math.Max(largestValue, values[i]);
+                                if (numValues[i] > 0)
+                                {
+                                    largestValue = Math.Max(largestValue, values[i] / numValues[i]);
+                                }
+
                                 largestNumValue = Math.Max(largestNumValue, numValues[i]);
                             }
                         }
@@ -310,10 +318,10 @@ namespace GameTelemetry
                             {
                                 tempColorValue = (((float)values[i] / numValues[i]) - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
                                 tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, (float)HeatmapValueMax);
+                                tempColorValue = Math.Min(tempColorValue, 1);
 
                                 tempTelemetryObject = new TelemetryEventGameObject();
-                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, orientation[i], heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, heatmapSize, values[i]);
+                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, orientation[i], heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, heatmapSize, values[i] / numValues[i]);
                                 CreateHeatmapObject(tempTelemetryObject);
                             }
                         }
@@ -326,7 +334,7 @@ namespace GameTelemetry
                             {
                                 tempColorValue = (float)(numValues[i] - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
                                 tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, (float)HeatmapValueMax);
+                                tempColorValue = Math.Min(tempColorValue, 1);
 
                                 tempTelemetryObject = new TelemetryEventGameObject();
                                 tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, orientation[i], heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, heatmapSize, numValues[i]);
@@ -344,11 +352,11 @@ namespace GameTelemetry
                             {
                                 tempColorValue = (((float)values[i] / numValues[i]) - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
                                 tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, (float)HeatmapValueMax);
+                                tempColorValue = Math.Min(tempColorValue, 1);
                                 tempHeight = (((float)values[i] / numValues[i]) / HeatmapValueMax) * heatmapSize;
 
                                 tempTelemetryObject = new TelemetryEventGameObject();
-                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, Vector3.zero, heatmapColor.GetColorFromRange(tempColorValue), PrimitiveType.Cube, new Vector3(heatmapSize, heatmapSize, tempHeight), values[i]);
+                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, Vector3.zero, heatmapColor.GetColorFromRange(tempColorValue), PrimitiveType.Cube, new Vector3(heatmapSize, heatmapSize, tempHeight), values[i] / numValues[i]);
                                 CreateHeatmapObject(tempTelemetryObject);
                             }
                         }
@@ -363,7 +371,7 @@ namespace GameTelemetry
                             {
                                 tempColorValue = (float)(numValues[i] - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
                                 tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, (float)HeatmapValueMax);
+                                tempColorValue = Math.Min(tempColorValue, 1);
                                 tempHeight = ((float)numValues[i] / HeatmapValueMax) * heatmapSize;
 
                                 tempTelemetryObject = new TelemetryEventGameObject();
