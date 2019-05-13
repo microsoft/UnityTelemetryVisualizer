@@ -10,6 +10,7 @@
 //--------------------------------------------------------------------------------------
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 namespace GameTelemetry
 {
@@ -19,7 +20,7 @@ namespace GameTelemetry
         public DateTime Time;
 
         //Value for an event
-        public float Value;
+        public Dictionary<string, string> Values = new Dictionary<string, string>();
 
         //Session of the event
         public string Session;
@@ -39,7 +40,7 @@ namespace GameTelemetry
         public void CopyFrom(EventInfo inEvent)
         {
             this.Time = inEvent.Time;
-            this.Value = inEvent.Value;
+            this.Values = inEvent.Values;
             this.Session = inEvent.Session;
             this.User = inEvent.User;
             this.Build = inEvent.Build;
@@ -145,7 +146,6 @@ namespace GameTelemetry
             eventInfo = new EventInfo();
 
             eventInfo.Time = inEvent.Time;
-            eventInfo.Value = inEvent.Value;
             eventInfo.Session = inEvent.Session;
             eventInfo.User = inEvent.User;
             eventInfo.Build = inEvent.Build;
@@ -160,6 +160,11 @@ namespace GameTelemetry
 
             eventName = $"{eventInfo.Category} {eventInfo.Name}";
 
+            foreach (var value in inEvent.Values)
+            {
+                eventInfo.Values.Add(value.Key, value.Value.ToString());
+            }
+
             if (index >= 0)
             {
                 eventName += index;
@@ -169,15 +174,15 @@ namespace GameTelemetry
         }
 
         //Populates event values for heatmaps
-        public void SetHeatmapEvent(int index, Vector3 inPoint, Vector3 inOrientation, Color inColor, PrimitiveType inType, float inScale, float inValue)
+        public void SetHeatmapEvent(int index, Vector3 inPoint, Vector3 inOrientation, Color inColor, PrimitiveType inType, float inScale, double inValue)
         {
             SetHeatmapEvent(index, inPoint, inOrientation, inColor, inType, new Vector3(inScale, inScale, inScale), inValue);
         }
 
-        public void SetHeatmapEvent(int index, Vector3 inPoint, Vector3 inOrientation, Color inColor, PrimitiveType inType, Vector3 inScale, float inValue)
+        public void SetHeatmapEvent(int index, Vector3 inPoint, Vector3 inOrientation, Color inColor, PrimitiveType inType, Vector3 inScale, double inValue)
         {
             eventInfo = new EventInfo();
-            eventInfo.Value = inValue;
+            eventInfo.Values.Add("Value", inValue.ToString());
             location = inPoint;
             orientation = inOrientation;
             color = inColor;

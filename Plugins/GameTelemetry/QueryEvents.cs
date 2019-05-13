@@ -186,6 +186,17 @@ namespace GameTelemetry
             return ev;
         }
 
+        public void GetAttributes(ref Dictionary<string, JSONObj> inMap)
+        {
+            foreach (var attr in Attributes)
+            {
+                if (attr.Key.StartsWith("pct_") || attr.Key.StartsWith("val_"))
+                {
+                    inMap.Add(attr.Key, attr.Value);
+                }
+            }
+        }
+
         public bool TryGetString(string name, out string outString)
         {
             if(Attributes.ContainsKey(name))

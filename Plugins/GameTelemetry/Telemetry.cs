@@ -73,12 +73,6 @@ namespace GameTelemetry
             return new TelemetryProperty("dir", vec);
         }
 
-        // The name of the value the visualizer will use
-        public static TelemetryProperty DisplayValue(string value)
-        {
-            return new TelemetryProperty("disp_val", value);
-        }
-
         // Timestamp of the event using the client's clock by default
         public static TelemetryProperty ClientTimestamp() {
             return new TelemetryProperty("client_ts", System.DateTime.UtcNow);

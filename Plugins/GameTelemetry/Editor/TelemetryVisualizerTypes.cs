@@ -195,6 +195,34 @@ namespace GameTelemetry
         }
     };
 
+    //Nodes used when preparing a heatmap
+    public class HeatmapNode
+    {
+        public int numValues;
+        public double values;
+        public Vector3 orientation;
+
+        public HeatmapNode()
+        {
+            numValues = 0;
+            values = 0;
+            orientation = Vector3.zero;
+        }
+        public HeatmapNode(int inNumVals, double inValues)
+        {
+            numValues = inNumVals;
+            values = inValues;
+            orientation = Vector3.zero;
+        }
+
+        public HeatmapNode(int inNumVals, double inValues, Vector3 inOrientation)
+        {
+            numValues = 0;
+            values = 0;
+            orientation = inOrientation;
+        }
+    };
+
     //Container for each UI line of the query
     public class QuerySetting
     {

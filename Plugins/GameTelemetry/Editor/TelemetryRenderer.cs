@@ -30,8 +30,8 @@ namespace GameTelemetry
             }
         }
 
-        public float HeatmapValueMin = -1;
-        public float HeatmapValueMax = -1;
+        public double HeatmapValueMin = -1;
+        public double HeatmapValueMax = -1;
 
         private List<TelemetryEventGameObject> gameObjectCollection = new List<TelemetryEventGameObject>();
         private bool needsTelemetryObjectUpdate = false;
@@ -42,7 +42,7 @@ namespace GameTelemetry
         } 
 
         // Master draw call.  Updates animation if running, otherwise checks if objects need to be updated
-        public void Tick(List<EventEditorContainer> filterCollection, float heatmapSize, HeatmapColors heatmapColor, int heatmapType, int heatmapShape, bool useOrientation, ref AnimationController animController)
+        public void Tick(List<EventEditorContainer> filterCollection, float heatmapSize, HeatmapColors heatmapColor, int heatmapType, int heatmapShape, bool useOrientation, string subEvent, ref AnimationController animController)
         {
             if (!animController.IsStopped())
             {
@@ -81,7 +81,7 @@ namespace GameTelemetry
                             animController.AnimSlider = animController.GetTimeScaleFromTime() * animController.AnimSliderMax;
                             if (start != next)
                             {
-                                GenerateHeatmap(tempContainer, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, next, tempContainer.events.Count - 1);
+                                GenerateHeatmap(tempContainer, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, next, tempContainer.events.Count - 1, subEvent);
                             }
                         }
                         else
@@ -108,7 +108,7 @@ namespace GameTelemetry
                             animController.AnimSlider = (1 - animController.GetTimeScaleFromTime()) * animController.AnimSliderMax;
                             if (start != next)
                             {
-                                GenerateHeatmap(tempContainer, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, next, tempContainer.events.Count - 1);
+                                GenerateHeatmap(tempContainer, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, next, tempContainer.events.Count - 1, subEvent);
                             }
                         }
                         else
@@ -157,12 +157,12 @@ namespace GameTelemetry
         }
 
         //Generate a heatmap for the range of events
-        public void GenerateHeatmap(EventEditorContainer collection, float heatmapSize, HeatmapColors heatmapColor, int heatmapType, int heatmapShape, bool useOrientation)
+        public void GenerateHeatmap(EventEditorContainer collection, float heatmapSize, HeatmapColors heatmapColor, int heatmapType, int heatmapShape, bool useOrientation, string subEvent)
         {
-            GenerateHeatmap(collection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, 0, collection.events.Count - 1);
+            GenerateHeatmap(collection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, 0, collection.events.Count - 1, subEvent);
         }
 
-        public void GenerateHeatmap(EventEditorContainer collection, float heatmapSize, HeatmapColors heatmapColor, int heatmapType, int heatmapShape, bool useOrientation, int first, int last)
+        public void GenerateHeatmap(EventEditorContainer collection, float heatmapSize, HeatmapColors heatmapColor, int heatmapType, int heatmapShape, bool useOrientation, int first, int last, string subEvent)
         {
             DestroyTelemetryObjects();
 
@@ -175,209 +175,229 @@ namespace GameTelemetry
                 }
 
                 //Segment the world in to blocks of the specified size encompassing all points
-                Bounds range = collection.GetPointRange(first, last);
-                float extent = heatmapSize / 2;
-                Vector3 boxSize = new Vector3(heatmapSize, heatmapSize, heatmapSize);
-                List<Bounds> parts = new List<Bounds>();
+                Vector3 origin = collection.GetPointRange(first, last).center;
 
-                range.max = new Vector3(range.max.x + heatmapSize, range.max.y + heatmapSize, range.max.z + heatmapSize);
+                //For each segment, collect all of the points inside and decide what data to watch based on the heatmap type
+                float scaledHeatmapSize = heatmapSize / 100;
+                Vector3 tempPoint;
+                Dictionary<Vector3, HeatmapNode> heatmapNodes = new Dictionary<Vector3, HeatmapNode>();
 
-                for (float x = range.min.x + extent; x < range.max.x; x += heatmapSize)
+                //For each segment, collect all of the points inside and decide what data to watch based on the heatmap type
+                TelemetryEventGameObject tempTelemetryObject;
+
+                if ((HeatmapValueMin == -1 && HeatmapValueMax == -1) || HeatmapValueMin == HeatmapValueMax)
                 {
-                    for (float y = range.min.y + extent; y < range.max.y; y += heatmapSize)
+                    double largestValue = 0;
+                    double smallestValue = 0;
+                    int largestNumValue = 0;
+
+                    if (useOrientation)
                     {
-                        for (float z = range.min.z + extent; z < range.max.z; z += heatmapSize)
+                        for (int j = first; j <= last; j++)
                         {
-                            parts.Add(new Bounds(new Vector3(x, y, z), boxSize));
-                        }
-                    }
-                }
+                            tempPoint = (collection.events[j].Point - origin) / heatmapSize;
+                            tempPoint.x = (float)Math.Floor(tempPoint.x);
+                            tempPoint.y = (float)Math.Floor(tempPoint.y);
+                            tempPoint.z = (float)Math.Floor(tempPoint.z);
 
-                if (parts.Count > 0)
-                {
-                    //For each segment, collect all of the points inside and decide what data to watch based on the heatmap type
-                    List<int> numValues = new List<int>();
-                    List<float> values = new List<float>();
-                    List<Vector3> orientation = new List<Vector3>();
-                    TelemetryEventGameObject tempTelemetryObject;
+                            HeatmapNode tempNode;
 
-                    numValues.AddRange(System.Linq.Enumerable.Repeat(0, parts.Count));
-                    values.AddRange(System.Linq.Enumerable.Repeat<float>(0, parts.Count));
-                    orientation.AddRange(System.Linq.Enumerable.Repeat<Vector3>(new Vector3(), parts.Count));
-
-                    if ((HeatmapValueMin == -1 && HeatmapValueMax == -1) || HeatmapValueMin == HeatmapValueMax)
-                    {
-                        float largestValue = 0;
-                        int largestNumValue = 0;
-
-                        if (useOrientation)
-                        {
-                            for (int i = 0; i < parts.Count; i++)
+                            if (heatmapNodes.ContainsKey(tempPoint))
                             {
-                                for (int j = first; j <= last; j++)
-                                {
-                                    if (parts[i].Contains(collection.events[j].Point))
-                                    {
-                                        numValues[i]++;
-                                        orientation[i] += collection.events[j].Orientation;
-                                        values[i] += collection.events[j].Value;
-                                    }
-                                }
-
-                                if (numValues[i] > 0)
-                                {
-                                    largestValue = Math.Max(largestValue, values[i] / numValues[i]);
-                                }
-
-                                largestNumValue = Math.Max(largestNumValue, numValues[i]);
-                                orientation[i] = orientation[i] / numValues[i];
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < parts.Count; i++)
-                            {
-                                for (int j = first; j <= last; j++)
-                                {
-                                    if (parts[i].Contains(collection.events[j].Point))
-                                    {
-                                        numValues[i]++;
-                                        values[i] += collection.events[j].Value;
-                                    }
-                                }
-
-                                if (numValues[i] > 0)
-                                {
-                                    largestValue = Math.Max(largestValue, values[i] / numValues[i]);
-                                }
-
-                                largestNumValue = Math.Max(largestNumValue, numValues[i]);
-                            }
-                        }
-
-                        HeatmapValueMin = 0;
-
-                        if (heatmapType == (int)Globals.HeatmapType.Value || heatmapType == (int)Globals.HeatmapType.Value_Bar)
-                        {
-                            if (collection.IsPercentage)
-                            {
-                                HeatmapValueMax = 100;
+                                heatmapNodes[tempPoint].numValues++;
+                                heatmapNodes[tempPoint].values += collection.events[j].GetValue(subEvent);
+                                heatmapNodes[tempPoint].orientation += collection.events[j].Orientation;
+                                tempNode = heatmapNodes[tempPoint];
                             }
                             else
                             {
-                                HeatmapValueMax = largestValue;
+                                tempNode = new HeatmapNode(1, collection.events[j].GetValue(subEvent), collection.events[j].Orientation);
+                                heatmapNodes.Add(tempPoint, tempNode);
                             }
+
+                            smallestValue = Math.Min(smallestValue, tempNode.values / tempNode.numValues);
+                            largestValue = Math.Max(largestValue, tempNode.values / tempNode.numValues);
+                            largestNumValue = Math.Max(largestNumValue, tempNode.numValues);
                         }
-                        else
+
+                        foreach (var node in heatmapNodes)
                         {
-                            HeatmapValueMax = largestNumValue;
+                            node.Value.orientation = node.Value.orientation / node.Value.numValues;
                         }
                     }
                     else
                     {
-                        if (useOrientation)
+                        for (int j = first; j <= last; j++)
                         {
-                            for (int i = 0; i < parts.Count; i++)
-                            {
-                                for (int j = first; j <= last; j++)
-                                {
-                                    if (parts[i].Contains(collection.events[j].Point))
-                                    {
-                                        numValues[i]++;
-                                        orientation[i] += collection.events[j].Orientation;
-                                        values[i] += collection.events[j].Value;
-                                    }
-                                }
+                            tempPoint = (collection.events[j].Point - origin) / heatmapSize;
+                            tempPoint.x = (float)Math.Floor(tempPoint.x);
+                            tempPoint.y = (float)Math.Floor(tempPoint.y);
+                            tempPoint.z = (float)Math.Floor(tempPoint.z);
 
-                                orientation[i] = orientation[i] / numValues[i];
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < parts.Count; i++)
+                            HeatmapNode tempNode;
+
+                            if (heatmapNodes.ContainsKey(tempPoint))
                             {
-                                for (int j = first; j <= last; j++)
-                                {
-                                    if (parts[i].Contains(collection.events[j].Point))
-                                    {
-                                        numValues[i]++;
-                                        values[i] += collection.events[j].Value;
-                                    }
-                                }
+                                heatmapNodes[tempPoint].numValues++;
+                                heatmapNodes[tempPoint].values += collection.events[j].GetValue(subEvent);
+                                tempNode = heatmapNodes[tempPoint];
                             }
+                            else
+                            {
+                                tempNode = new HeatmapNode(1, collection.events[j].GetValue(subEvent));
+                                heatmapNodes.Add(tempPoint, tempNode);
+                            }
+
+                            smallestValue = Math.Min(smallestValue, tempNode.values / tempNode.numValues);
+                            largestValue = Math.Max(largestValue, tempNode.values / tempNode.numValues);
+                            largestNumValue = Math.Max(largestNumValue, tempNode.numValues);
                         }
                     }
 
+                    HeatmapValueMin = 0;
+
+                    if (heatmapType == (int)Globals.HeatmapType.Value || heatmapType == (int)Globals.HeatmapType.Value_Bar)
+                    {
+                        if (subEvent.StartsWith("pct_"))
+                        {
+                            HeatmapValueMin = 0;
+                            HeatmapValueMax = 100;
+                        }
+                        else
+                        {
+                            HeatmapValueMin = smallestValue;
+                            HeatmapValueMax = largestValue;
+                        }
+                    }
+                    else
+                    {
+                        HeatmapValueMax = largestNumValue;
+                    }
+                }
+                else
+                {
+                    if (useOrientation)
+                    {
+                        for (int j = first; j <= last; j++)
+                        {
+                            tempPoint = (collection.events[j].Point - origin) / heatmapSize;
+                            tempPoint.x = (float)Math.Floor(tempPoint.x);
+                            tempPoint.y = (float)Math.Floor(tempPoint.y);
+                            tempPoint.z = (float)Math.Floor(tempPoint.z);
+
+                            HeatmapNode tempNode;
+
+                            if (heatmapNodes.ContainsKey(tempPoint))
+                            {
+                                heatmapNodes[tempPoint].numValues++;
+                                heatmapNodes[tempPoint].values += collection.events[j].GetValue(subEvent);
+                                heatmapNodes[tempPoint].orientation += collection.events[j].Orientation;
+                                tempNode = heatmapNodes[tempPoint];
+                            }
+                            else
+                            {
+                                tempNode = new HeatmapNode(1, collection.events[j].GetValue(subEvent), collection.events[j].Orientation);
+                                heatmapNodes.Add(tempPoint, tempNode);
+                            }
+                        }
+
+                        foreach (var node in heatmapNodes)
+                        {
+                            node.Value.orientation = node.Value.orientation / node.Value.numValues;
+                        }
+                    }
+                    else
+                    {
+                        for (int j = first; j <= last; j++)
+                        {
+                            tempPoint = (collection.events[j].Point - origin) / heatmapSize;
+                            tempPoint.x = (float)Math.Floor(tempPoint.x);
+                            tempPoint.y = (float)Math.Floor(tempPoint.y);
+                            tempPoint.z = (float)Math.Floor(tempPoint.z);
+
+                            HeatmapNode tempNode;
+
+                            if (heatmapNodes.ContainsKey(tempPoint))
+                            {
+                                heatmapNodes[tempPoint].numValues++;
+                                heatmapNodes[tempPoint].values += collection.events[j].GetValue(subEvent);
+                                tempNode = heatmapNodes[tempPoint];
+                            }
+                            else
+                            {
+                                tempNode = new HeatmapNode(1, collection.events[j].GetValue(subEvent));
+                                heatmapNodes.Add(tempPoint, tempNode);
+                            }
+                        }
+                    }
+                }
+
+                if (heatmapNodes.Count > 0)
+                {
+                    double tempValue;
                     float tempColorValue;
+                    int i = 0;
 
                     if (heatmapType == (int)Globals.HeatmapType.Value)
                     {
-                        for (int i = 0; i < parts.Count; i++)
+                        foreach (var node in heatmapNodes)
                         {
-                            if (values[i] > 0)
-                            {
-                                tempColorValue = (((float)values[i] / numValues[i]) - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
-                                tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, 1);
+                            tempValue = node.Value.values / node.Value.numValues;
+                            tempColorValue = (float)((tempValue - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
+                            tempColorValue = Mathf.Clamp(tempColorValue, 0, 1);
 
-                                tempTelemetryObject = new TelemetryEventGameObject();
-                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, orientation[i], heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, heatmapSize, values[i] / numValues[i]);
-                                CreateHeatmapObject(tempTelemetryObject);
-                            }
+                            tempTelemetryObject = new TelemetryEventGameObject();
+                            tempTelemetryObject.SetHeatmapEvent(i, (node.Key * heatmapSize) + origin, node.Value.orientation, heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, heatmapSize, tempValue);
+                            CreateHeatmapObject(tempTelemetryObject);
+                            i++;
                         }
                     }
                     else if (heatmapType == (int)Globals.HeatmapType.Population)
                     {
-                        for (int i = 0; i < parts.Count; i++)
+                        foreach (var node in heatmapNodes)
                         {
-                            if (numValues[i] > 0)
-                            {
-                                tempColorValue = (float)(numValues[i] - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
-                                tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, 1);
+                            tempValue = node.Value.values / HeatmapValueMax;
+                            tempColorValue = (float)((tempValue - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
+                            tempColorValue = Mathf.Clamp(tempColorValue, 0, 1);
 
-                                tempTelemetryObject = new TelemetryEventGameObject();
-                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, orientation[i], heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, heatmapSize, numValues[i]);
-                                CreateHeatmapObject(tempTelemetryObject);
-                            }
+                            tempTelemetryObject = new TelemetryEventGameObject();
+                            tempTelemetryObject.SetHeatmapEvent(i, (node.Key * heatmapSize) + origin, node.Value.orientation, heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, heatmapSize, tempValue);
+                            CreateHeatmapObject(tempTelemetryObject);
+                            i++;
                         }
                     }
                     else if (heatmapType == (int)Globals.HeatmapType.Value_Bar)
                     {
                         float tempHeight;
 
-                        for (int i = 0; i < parts.Count; i++)
+                        foreach (var node in heatmapNodes)
                         {
-                            if (values[i] > 0)
-                            {
-                                tempColorValue = (((float)values[i] / numValues[i]) - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
-                                tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, 1);
-                                tempHeight = (((float)values[i] / numValues[i]) / HeatmapValueMax) * heatmapSize;
+                            tempValue = node.Value.values / node.Value.numValues;
+                            tempColorValue = (float)((tempValue - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
+                            tempColorValue = Mathf.Clamp(tempColorValue, 0, 1);
+                            tempHeight = (float)(tempValue / HeatmapValueMax) * heatmapSize;
 
-                                tempTelemetryObject = new TelemetryEventGameObject();
-                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, Vector3.zero, heatmapColor.GetColorFromRange(tempColorValue), PrimitiveType.Cube, new Vector3(heatmapSize, heatmapSize, tempHeight), values[i] / numValues[i]);
-                                CreateHeatmapObject(tempTelemetryObject);
-                            }
+                            tempTelemetryObject = new TelemetryEventGameObject();
+                            tempTelemetryObject.SetHeatmapEvent(i, (node.Key * heatmapSize) + origin, Vector3.zero, heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, new Vector3(heatmapSize, heatmapSize, tempHeight), tempValue);
+                            CreateHeatmapObject(tempTelemetryObject);
+                            i++;
                         }
                     }
                     else if (heatmapType == (int)Globals.HeatmapType.Population_Bar)
                     {
                         float tempHeight;
 
-                        for (int i = 0; i < parts.Count; i++)
+                        foreach (var node in heatmapNodes)
                         {
-                            if (numValues[i] > 0)
-                            {
-                                tempColorValue = (float)(numValues[i] - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin);
-                                tempColorValue = Math.Max(tempColorValue, 0);
-                                tempColorValue = Math.Min(tempColorValue, 1);
-                                tempHeight = ((float)numValues[i] / HeatmapValueMax) * heatmapSize;
+                            tempValue = node.Value.values / HeatmapValueMax;
+                            tempColorValue = (float)((tempValue - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
+                            tempColorValue = Mathf.Clamp(tempColorValue, 0, 1);
+                            tempHeight = (float)tempValue * heatmapSize;
 
-                                tempTelemetryObject = new TelemetryEventGameObject();
-                                tempTelemetryObject.SetHeatmapEvent(i, parts[i].center, Vector3.zero, heatmapColor.GetColorFromRange(tempColorValue), PrimitiveType.Cube, new Vector3(heatmapSize, heatmapSize, tempHeight), numValues[i]);
-                                CreateHeatmapObject(tempTelemetryObject);
-                            }
+                            tempTelemetryObject = new TelemetryEventGameObject();
+                            tempTelemetryObject.SetHeatmapEvent(i, (node.Key * heatmapSize) + origin, Vector3.zero, heatmapColor.GetColorFromRange(tempColorValue), (PrimitiveType)heatmapShape, new Vector3(heatmapSize, heatmapSize, tempHeight), tempValue);
+                            CreateHeatmapObject(tempTelemetryObject);
+                            i++;
                         }
                     }
                 }

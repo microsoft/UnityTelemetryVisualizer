@@ -49,6 +49,8 @@ namespace GameTelemetry
         private AnimationController animController = new AnimationController();
 
         //Heatmap
+        private int vizSubSelectedEvent;
+        private List<string> subEventNames = new List<string>();
         private int heatmapType = 0;
         private int heatmapShape = 3;
         private HeatmapColors heatmapColor = new HeatmapColors();
@@ -74,7 +76,14 @@ namespace GameTelemetry
 
         private void Update()
         {
-            renderer.Tick(filterCollection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, ref animController);
+            if(subEventNames.Count > vizSubSelectedEvent && vizSubSelectedEvent > -1)
+            {
+                renderer.Tick(filterCollection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, subEventNames[vizSubSelectedEvent], ref animController);
+            }
+            else
+            {
+                renderer.Tick(filterCollection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, "", ref animController);
+            }
         }
 
         void OnGUI()
@@ -169,11 +178,12 @@ namespace GameTelemetry
                 {
                     vizSelectedEvent = currSelectedEvent;
 
-                    for(int i = 0; i < queryEventCollection.Count; i++)
+                    for (int i = 0; i < queryEventCollection.Count; i++)
                     {
                         if (queryEventCollection[i].Name == eventNames[vizSelectedEvent])
                         {
                             animController.EventContainer = queryEventCollection[i];
+                            subEventNames = new List<string>(queryEventCollection[i].attributeNames);
                             break;
                         }
                     }
@@ -266,6 +276,21 @@ namespace GameTelemetry
 
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Space(marginSize);
+                EditorGUILayout.LabelField("Value", GUILayout.Width(textWidth));
+                int currSelectedSubEvent = EditorGUILayout.Popup("", vizSubSelectedEvent, subEventNames.ToArray());
+                if (vizSubSelectedEvent != currSelectedSubEvent)
+                {
+                    vizSubSelectedEvent = currSelectedSubEvent;
+                    renderer.HeatmapValueMin = -1;
+                    renderer.HeatmapValueMax = -1;
+                }
+                GUILayout.Space(marginSize);
+                EditorGUILayout.EndHorizontal();
+
+                GUILayout.Space(heatmapGap);
+
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(marginSize);
                 EditorGUILayout.LabelField("Type", GUILayout.Width(textWidth));
                 heatmapType = EditorGUILayout.Popup("", heatmapType, Globals.HeatmapTypeString);
                 GUILayout.Space(marginSize);
@@ -313,9 +338,9 @@ namespace GameTelemetry
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Space(marginSize);
                 EditorGUILayout.LabelField("Value Range", GUILayout.Width(textWidth));
-                renderer.HeatmapValueMin = EditorGUILayout.FloatField(renderer.HeatmapValueMin);
+                renderer.HeatmapValueMin = EditorGUILayout.DoubleField(renderer.HeatmapValueMin);
                 GUILayout.Space(marginSize);
-                renderer.HeatmapValueMax = EditorGUILayout.FloatField(renderer.HeatmapValueMax);
+                renderer.HeatmapValueMax = EditorGUILayout.DoubleField(renderer.HeatmapValueMax);
                 GUILayout.Space(marginSize);
                 EditorGUILayout.EndHorizontal();
 
@@ -362,7 +387,7 @@ namespace GameTelemetry
                         }
                     }
 
-                    renderer.GenerateHeatmap(collection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation);
+                    renderer.GenerateHeatmap(collection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, subEventNames[vizSubSelectedEvent]);
                 }
                 GUILayout.Space(marginSize);
                 EditorGUILayout.EndHorizontal();
@@ -523,6 +548,7 @@ namespace GameTelemetry
         {
             queryEventCollection.Clear();
             eventNames.Clear();
+            subEventNames.Clear();
 
             string currentName;
 
@@ -555,6 +581,7 @@ namespace GameTelemetry
             }
 
             vizSelectedEvent = -1;
+            vizSubSelectedEvent = -1;
             searchFolddown = true;
             FilterEvents();
 

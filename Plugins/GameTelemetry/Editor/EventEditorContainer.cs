@@ -26,16 +26,7 @@ namespace GameTelemetry
         public Vector3 Orientation;
 
         public DateTime Time;
-        public float Value;
-        private bool isPct;
-        public bool IsPercentage
-        {
-            get
-            {
-                return isPct;
-            }
-        }
-
+        public Dictionary<string, JSONObj> Values = new Dictionary<string, JSONObj>();
 
         public TelemetryEvent()
         {
@@ -47,16 +38,12 @@ namespace GameTelemetry
             Point = Vector3.zero;
             Orientation = Vector3.zero;
             Time = DateTime.Now;
-            Value = 0;
-            isPct = false;
         }
 
-        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, string inUser, Vector3 point, DateTime time, float value, bool isPct)
+        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, string inUser, Vector3 point, DateTime time)
         {
             this.Point = point;
             this.Time = time;
-            this.Value = value;
-            this.isPct = isPct;
             Orientation = Vector3.zero;
             Name = inName;
             Category = inCategory;
@@ -65,18 +52,28 @@ namespace GameTelemetry
             Build = inBuild;
         }
 
-        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, string inUser, Vector3 point, Vector3 orientation, DateTime time, float value, bool isPct)
+        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, string inUser, Vector3 point, Vector3 orientation, DateTime time)
         {
             this.Point = point;
             this.Orientation = orientation;
             this.Time = time;
-            this.Value = value;
-            this.isPct = isPct;
             Name = inName;
             Category = inCategory;
             Session = inSession;
             User = inUser;
             Build = inBuild;
+        }
+
+        public double GetValue(string key)
+        {
+            double value = 0;
+
+            if (Values.ContainsKey(key))
+            {
+                value = Values[key].f;
+            }
+
+            return value;
         }
     };
 
@@ -135,15 +132,6 @@ namespace GameTelemetry
             }
         }
 
-        private bool isPct;
-        public bool IsPercentage
-        {
-            get
-            {
-                return isPct;
-            }
-        }
-
         public DateTime TimeStart
         {
             get
@@ -163,15 +151,16 @@ namespace GameTelemetry
         public string Name;
         public string Session;
         public List<TelemetryEvent> events;
+        public HashSet<string> attributeNames;
 
         public EventEditorContainer()
         {
             shouldDraw = Globals.DefaultDrawSetting;
             shouldAnimate = false;
-            isPct = false;
             color = Color.red;
             type = (int)PrimitiveType.Sphere;
             events = new List<TelemetryEvent>();
+            attributeNames = new HashSet<string>();
         }
 
         public EventEditorContainer(string Name, int index) : this()
@@ -191,23 +180,11 @@ namespace GameTelemetry
             {
                 Fill(inEvents);
                 Name = inEvents[0].Name;
-                isPct = events[0].IsPercentage;
             }
         }
 
         public void AddEvent(QueryEvent newEvent)
         {
-            string valueName = "";
-            double value = 0;
-            bool isPct = false;
-
-            //Check for a specified value the event wants to draw
-            if (newEvent.TryGetString("disp_val", out valueName))
-            {
-                value = newEvent.GetNumber(valueName);
-                isPct = valueName.StartsWith("pct_");
-            }
-
             events.Add(new TelemetryEvent(
                 newEvent.Name,
                 newEvent.Category,
@@ -216,9 +193,14 @@ namespace GameTelemetry
                 newEvent.UserId,
                 newEvent.PlayerPosition,
                 newEvent.PlayerDirection,
-                newEvent.Time,
-                (float)value,
-                isPct));
+                newEvent.Time));
+
+            newEvent.GetAttributes(ref events[events.Count - 1].Values);
+
+            foreach (var attr in events[events.Count - 1].Values)
+            {
+                attributeNames.Add(attr.Key);
+            }
         }
 
         //Add an array of query results
