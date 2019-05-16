@@ -166,7 +166,8 @@ namespace GameTelemetry
         {
             DestroyTelemetryObjects();
 
-            if (collection.events.Count != 0)
+            if (collection.events.Count != 0
+                && !(subEvent == "" && (heatmapType == (int)Globals.HeatmapType.Value || heatmapType == (int)Globals.HeatmapType.Value_Bar)))
             {
                 if ((first == 0 && first == last) || (first == collection.events.Count - 1 && first == last))
                 {
@@ -356,8 +357,8 @@ namespace GameTelemetry
                     {
                         foreach (var node in heatmapNodes)
                         {
-                            tempValue = node.Value.values / HeatmapValueMax;
-                            tempColorValue = (float)((tempValue - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
+                            tempValue = node.Value.numValues / HeatmapValueMax;
+                            tempColorValue = (float)((node.Value.numValues - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
                             tempColorValue = Mathf.Clamp(tempColorValue, 0, 1);
 
                             tempTelemetryObject = new TelemetryEventGameObject();
@@ -389,8 +390,8 @@ namespace GameTelemetry
 
                         foreach (var node in heatmapNodes)
                         {
-                            tempValue = node.Value.values / HeatmapValueMax;
-                            tempColorValue = (float)((tempValue - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
+                            tempValue = node.Value.numValues / HeatmapValueMax;
+                            tempColorValue = (float)((node.Value.numValues - HeatmapValueMin) / (HeatmapValueMax - HeatmapValueMin));
                             tempColorValue = Mathf.Clamp(tempColorValue, 0, 1);
                             tempHeight = (float)tempValue * heatmapSize;
 
