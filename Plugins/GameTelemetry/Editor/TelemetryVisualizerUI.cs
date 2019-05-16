@@ -200,6 +200,9 @@ namespace GameTelemetry
                     }
 
                     animController.AnimSliderMax = (float)tempSpan.TotalSeconds;
+
+                    renderer.HeatmapValueMin = -1;
+                    renderer.HeatmapValueMax = -1;
                 }
                 GUILayout.Space(marginSize);
                 EditorGUILayout.EndHorizontal();
@@ -387,7 +390,14 @@ namespace GameTelemetry
                         }
                     }
 
-                    renderer.GenerateHeatmap(collection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, subEventNames[vizSubSelectedEvent]);
+                    if (vizSubSelectedEvent > 0 && vizSubSelectedEvent > subEventNames.Count)
+                    {
+                        renderer.GenerateHeatmap(collection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, subEventNames[vizSubSelectedEvent]);
+                    }
+                    else
+                    {
+                        renderer.GenerateHeatmap(collection, heatmapSize, heatmapColor, heatmapType, heatmapShape, useOrientation, "");
+                    }
                 }
                 GUILayout.Space(marginSize);
                 EditorGUILayout.EndHorizontal();
