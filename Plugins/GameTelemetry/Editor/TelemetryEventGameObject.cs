@@ -25,9 +25,6 @@ namespace GameTelemetry
         //Session of the event
         public string Session;
 
-        //User ID of the event
-        public string User;
-
         //Build string of the event
         public string Build;
 
@@ -42,7 +39,6 @@ namespace GameTelemetry
             this.Time = inEvent.Time;
             this.Values = inEvent.Values;
             this.Session = inEvent.Session;
-            this.User = inEvent.User;
             this.Build = inEvent.Build;
             this.Category = inEvent.Category;
             this.Name = inEvent.Name;
@@ -147,7 +143,6 @@ namespace GameTelemetry
 
             eventInfo.Time = inEvent.Time;
             eventInfo.Session = inEvent.Session;
-            eventInfo.User = inEvent.User;
             eventInfo.Build = inEvent.Build;
             eventInfo.Name = inEvent.Name;
             eventInfo.Category = inEvent.Category;

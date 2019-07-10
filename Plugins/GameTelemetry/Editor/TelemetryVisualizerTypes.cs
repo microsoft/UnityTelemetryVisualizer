@@ -80,8 +80,7 @@ namespace GameTelemetry
             ClientId,
             Platform,
             ProcessId,
-            SessionId,
-            UserId
+            SessionId
         };
 
         public static string[] QueryFieldStrings =
@@ -92,8 +91,7 @@ namespace GameTelemetry
             "Client ID",
             "Platform",
             "Process ID",
-            "Session ID",
-            "User ID"
+            "Session ID"
         };
 
         public static string[] QueryExpectedStrings =
@@ -104,8 +102,7 @@ namespace GameTelemetry
             QueryIds.ClientId,
             QueryIds.Platform,
             QueryIds.ProcessId,
-            QueryIds.SessionId,
-            QueryIds.UserId,
+            QueryIds.SessionId
         };
 
         public enum QueryOperator

@@ -90,13 +90,6 @@ namespace GameTelemetry
             return new TelemetryProperty("ClientId", value);
         }
 
-        // Unique user id for the user playing the game
-        // Typically set in the Common properties
-        public static TelemetryProperty UserId(string value)
-        {
-            return new TelemetryProperty("UserId", value);
-        }
-
         // Unique session id for the current play session
         public static TelemetryProperty SessionId(string value)
         {
