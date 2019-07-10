@@ -17,7 +17,6 @@ namespace GameTelemetry
     //Primary container for events managed by the UI
     public class TelemetryEvent
     {
-        public string User;
         public string Build;
         public string Name;
         public string Category;
@@ -33,14 +32,13 @@ namespace GameTelemetry
             Name = "";
             Category = "";
             Session = "";
-            User = "";
             Build = "";
             Point = Vector3.zero;
             Orientation = Vector3.zero;
             Time = DateTime.Now;
         }
 
-        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, string inUser, Vector3 point, DateTime time)
+        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, Vector3 point, DateTime time)
         {
             this.Point = point;
             this.Time = time;
@@ -48,11 +46,10 @@ namespace GameTelemetry
             Name = inName;
             Category = inCategory;
             Session = inSession;
-            User = inUser;
             Build = inBuild;
         }
 
-        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, string inUser, Vector3 point, Vector3 orientation, DateTime time)
+        public TelemetryEvent(string inName, string inCategory, string inSession, string inBuild, Vector3 point, Vector3 orientation, DateTime time)
         {
             this.Point = point;
             this.Orientation = orientation;
@@ -60,7 +57,6 @@ namespace GameTelemetry
             Name = inName;
             Category = inCategory;
             Session = inSession;
-            User = inUser;
             Build = inBuild;
         }
 
@@ -190,7 +186,6 @@ namespace GameTelemetry
                 newEvent.Category,
                 newEvent.SessionId,
                 $"{newEvent.BuildType} {newEvent.BuildId} {newEvent.Platform}",
-                newEvent.UserId,
                 newEvent.PlayerPosition,
                 newEvent.PlayerDirection,
                 newEvent.Time));

@@ -31,7 +31,6 @@ Telemetry.Initialize(myGameObject);
     + Session ID
     + Build ID
     + Process ID
-    + User ID
     + Sequence ID
 
 3.	Use TelemetryBuilder to assign properties to your event

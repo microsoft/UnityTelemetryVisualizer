@@ -66,9 +66,6 @@ namespace GameTelemetry
 
                 //Process ID
                 instance.commonProperties.SetProperty(QueryIds.ProcessId, System.Diagnostics.Process.GetCurrentProcess().Id.ToString());
-
-                //User ID
-                instance.commonProperties.SetProperty(QueryIds.UserId, System.Environment.UserName);
             }
 
             worker = host.AddComponent<TelemetryWorker>();

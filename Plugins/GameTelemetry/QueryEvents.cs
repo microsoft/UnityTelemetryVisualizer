@@ -32,7 +32,6 @@ namespace GameTelemetry
         public const string BuildId = "build_id";
         public const string ProcessId = "process_id";
         public const string Platform = "platform";
-        public const string UserId = "user_id";
         public const string Category = "cat";
     }
 
@@ -106,14 +105,6 @@ namespace GameTelemetry
             get
             {
                 return GetString(QueryIds.Platform);
-            }
-        }
-
-        public string UserId
-        {
-            get
-            {
-                return GetString(QueryIds.UserId);
             }
         }
 
