@@ -435,7 +435,14 @@ namespace GameTelemetry
                 }
 
                 // Category
-                queryCollection[i].Field = (Globals.QueryField)EditorGUILayout.Popup("", (int)queryCollection[i].Field, Globals.QueryFieldStrings, GUILayout.Width(100));
+                if(queryCollection[i].Field == Globals.QueryField.Other)
+                {
+                    queryCollection[i].OtherField = EditorGUILayout.TextField("", queryCollection[i].OtherField);
+                }
+                else
+                {
+                    queryCollection[i].Field = (Globals.QueryField)EditorGUILayout.Popup("", (int)queryCollection[i].Field, Globals.QueryFieldStrings, GUILayout.Width(100));
+                }
 
                 // ==
                 queryCollection[i].Operator = (Globals.QueryOperator)EditorGUILayout.Popup("", (int)queryCollection[i].Operator, Globals.QueryOperatorStrings, GUILayout.Width(100));
@@ -509,13 +516,47 @@ namespace GameTelemetry
                         break;
                 }
 
-                if (queryCollection[i].isAnd)
+                JSONObj finalValue;
+                long tempValue;
+
+                if (queryCollection[i].Value.ToLower() == "true")
                 {
-                    andNodes.Add(new QueryNode(QueryNodeType.Comparison, Globals.QueryExpectedStrings[(int)queryCollection[i].Field], op, new JSONObj($"\"{queryCollection[i].Value}\"")));
+                    finalValue = new JSONObj(true);
+                }
+                else if (queryCollection[i].Value.ToLower() == "false")
+                {
+                    finalValue = new JSONObj(false);
+                }
+                else if (long.TryParse(queryCollection[i].Value, out tempValue))
+                {
+                    finalValue = new JSONObj(tempValue);
                 }
                 else
                 {
-                    orNodes.Add(new QueryNode(QueryNodeType.Comparison, Globals.QueryExpectedStrings[(int)queryCollection[i].Field], op, new JSONObj($"\"{queryCollection[i].Value}\"")));
+                    finalValue = new JSONObj($"\"{queryCollection[i].Value}\"");
+                }
+
+                if (queryCollection[i].isAnd)
+                {
+                    if(queryCollection[i].Field == Globals.QueryField.Other)
+                    {
+                        andNodes.Add(new QueryNode(QueryNodeType.Comparison, queryCollection[i].OtherField, op, finalValue));
+                    }
+                    else
+                    {
+                        andNodes.Add(new QueryNode(QueryNodeType.Comparison, Globals.QueryExpectedStrings[(int)queryCollection[i].Field], op, new JSONObj($"\"{queryCollection[i].Value}\"")));
+                    }
+                }
+                else
+                {
+                    if (queryCollection[i].Field == Globals.QueryField.Other)
+                    {
+                        orNodes.Add(new QueryNode(QueryNodeType.Comparison, queryCollection[i].OtherField, op, finalValue));
+                    }
+                    else
+                    {
+                        orNodes.Add(new QueryNode(QueryNodeType.Comparison, Globals.QueryExpectedStrings[(int)queryCollection[i].Field], op, new JSONObj($"\"{queryCollection[i].Value}\"")));
+                    }
                 }
             }
 

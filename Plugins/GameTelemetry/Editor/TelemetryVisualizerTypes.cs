@@ -80,7 +80,8 @@ namespace GameTelemetry
             ClientId,
             Platform,
             ProcessId,
-            SessionId
+            SessionId,
+            Other
         };
 
         public static string[] QueryFieldStrings =
@@ -91,7 +92,8 @@ namespace GameTelemetry
             "Client ID",
             "Platform",
             "Process ID",
-            "Session ID"
+            "Session ID",
+            "Other"
         };
 
         public static string[] QueryExpectedStrings =
@@ -225,6 +227,7 @@ namespace GameTelemetry
     {
         public bool isAnd;
         public Globals.QueryField Field;
+        public string OtherField;
         public Globals.QueryOperator Operator;
         public string Value;
 
@@ -232,6 +235,7 @@ namespace GameTelemetry
         {
             isAnd = false;
             Field = 0;
+            OtherField = "";
             Operator = 0;
             Value = "";
         }
