@@ -517,7 +517,7 @@ namespace GameTelemetry
                 }
 
                 JSONObj finalValue;
-                long tempValue;
+                float tempValue;
 
                 if (queryCollection[i].Value.ToLower() == "true")
                 {
@@ -527,7 +527,7 @@ namespace GameTelemetry
                 {
                     finalValue = new JSONObj(false);
                 }
-                else if (long.TryParse(queryCollection[i].Value, out tempValue))
+                else if (float.TryParse(queryCollection[i].Value, out tempValue))
                 {
                     finalValue = new JSONObj(tempValue);
                 }
